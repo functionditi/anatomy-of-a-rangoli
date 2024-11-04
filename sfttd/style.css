@@ -1,0 +1,11 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  background-color: #F3F0EB;
+  cursor: none;
+}
+canvas {
+  display: block;
+  cursor: none;
+
+}
