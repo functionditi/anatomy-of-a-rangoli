@@ -12,22 +12,24 @@ let angleArray = []; // Array to store angles in degrees
 let i = 0;
 let myFont;
 
-let colUpdate=30;
+
 let port;
-let randomInterval;;
 
 
 const axi = new axidraw.AxiDraw();
 let connected = false;
 let drawingComplete = false;
+let drawingStarted = false; // Add this flag to control when drawing starts
+let isDrawing = false; // Flag to indicate if AxiDraw is actively drawing
+
+
 let liftPen=false;
-let paused=true;
+let paused = false; // Flag to indicate if the drawing is paused
+
 
 const AXI_SPEED=50;
 let currentSpeed = AXI_SPEED; // Start with the default speed
 let drawRev=false;
-
-let penDownforSetup=false;
 
 let drawingLayer;
 
@@ -48,13 +50,12 @@ palette.push("#DBBAA7");
 palette.push("#202125");
 let brushScale=1;
 let brushThickness = 2;
-let brushColor;
 let selectedBrush = "marker2";
 
 
-const MAX_X_MM = 210; // 15 cm in mm
+const MAX_X_MM = 220; // 15 cm in mm
 //const MAX_X_MM = 100; // 15 cm in mm
-const MAX_Y_MM = 120; // 15 cm in mm
+const MAX_Y_MM = 130; // 15 cm in mm
 // const MAX_X_MM = 90; // 15 cm in mm
 // const MAX_Y_MM = 90; // 15 cm in mm
 // const P5_CANVAS_SIZE_W = (rows + 1) * spacing; 
@@ -76,16 +77,9 @@ function setup() {
   rows = Math.floor(P5_CANVAS_SIZE_W / spacing) - 1;
   columns = Math.floor(P5_CANVAS_SIZE_H / spacing) - 1;
 
-  randomInterval= Math.floor(random(30, 1000));
-
   // WEBGL canvas requires adjusting the origin
   drawingLayer = createGraphics(P5_CANVAS_SIZE_W, P5_CANVAS_SIZE_H, P2D);
   drawingLayer.clear();
-
-  pullisLayer = createGraphics(P5_CANVAS_SIZE_W, P5_CANVAS_SIZE_H, P2D);
-  pullisLayer.clear();
-
-
   resetPattern();
   cpd = 4 * (sqrt(2) - 1) / 3;
 
@@ -119,85 +113,48 @@ function setup() {
 brush.pick(selectedBrush);
  
   
-brushColor=random(palette)
+
   //background("#F3F0EB");
-  background("#fff");
+  background("#E8E0D5");
   drawInitialGrid();
 }
 
 function drawInitialGrid() {
   // push();
-   brush.push();
+  // brush.push();
   fill(0);
   stroke(255, 140, 0);
   strokeWeight(1);
   noFill();
   for (let i = 0; i < pullis.length; i++) {
-    brush.push();
-    brush.scaleBrushes(1);
-    brush.strokeWeight(0.5);
+    //brush.push();
+    // brush.scaleBrushes(1);
+    // brush.strokeWeight(0.5);
     brush.pick("marker");
     brush.circle(pullis[i].x - width / 2, pullis[i].y - height / 2, 1, 1); // Adjusting positions for WEBGL
     //brush.rect(pullis[i].x - width / 2, pullis[i].y - height / 2, spacing, spacing, CENTER);
     //brush.pop();
   }
-   brush.pop();
+  // brush.pop();
   // pop();
 
-  
   // brush.scaleBrushes(brushScale);
   // brush.strokeWeight(brushThickness);
-
-//   pullisLayer.fill(0);
-//   pullisLayer.stroke(255, 140, 0);
-//   pullisLayer.strokeWeight(2);
-//   pullisLayer.noFill();
-  
-//   pullisLayer.push();
-//  // pullisLayer.translate(-width/2, -height/2)
-//   for (let i = 0; i < pullis.length; i++) {
-//     // Draw each pulli on the pullisLayer
-//     pullisLayer.circle(pullis[i].x , pullis[i].y , 5); // Adjusting positions for WEBGL
-//   }
-//   pullisLayer.pop();
 }
 
-// function drawKolamAsync() {
-//   return new Promise(async (resolve) => {
-//     for (let i = 0; i < framework.length; i++) {
-//       await drawKolamAsyncHelper(i, false);
-//     }
+function drawKolamAsync() {
+  return new Promise(async (resolve) => {
+    for (let i = 0; i < framework.length; i++) {
+      await drawKolamAsyncHelper(i, false);
+    }
     
-//     // Resolve once the first Kolam drawing is complete and pause
-//     console.log("Kolam drawing complete. Pausing AxiDraw.");
-//     resolve();
-//     drawingComplete = true; // Indicate drawing is complete to prevent further actions
+    // Resolve once the first Kolam drawing is complete and pause
+    console.log("Kolam drawing complete. Pausing AxiDraw.");
+    resolve();
+    drawingComplete = true; // Indicate drawing is complete to prevent further actions
   
-    
-    
-
-    
-//     // setTimeout(() => {
-      
-//     // }, 1000); // Adjust delay
-
-//     // Optional: Disconnect the AxiDraw to ensure it's in idle mode
-//     // if (connected) {
-//     //   await axi.disconnect();
-//     //   connected = false;
-//     //   console.log("AxiDraw disconnected to pause and chill.");
-//     // }
-//   });
-// }
-
-async function drawKolamAsync() {
-  for (let i = 0; i < framework.length; i++) {
-      await drawKolamAsyncHelper(i, false);  // Wait for each segment to finish
-  }
-  drawingComplete = true;  // Ensure we only set this after the whole drawing is complete
-  console.log("Kolam drawing complete.");
+  });
 }
-
 
 
 function drawKolamAsyncHelper(i, isReverse) {
@@ -209,70 +166,33 @@ function drawKolamAsyncHelper(i, isReverse) {
   });
 }
 
-// async function resetAndRedraw() {
-//   // Clear the canvas and set new spacing
-//   background("#FFF");
-//   spacing = int(random(6, 18))*10;
-//   spacing = parseInt(spacing);
-//   if (isNaN(spacing) || spacing <= 0) {
-//     spacing = 50; // Fallback to a default value if input is invalid
-//   }
-
-//    drawingLayer.clear();
-//   resetPattern();
-//   rows = Math.floor(P5_CANVAS_SIZE_W / spacing);
-//   columns = Math.floor(P5_CANVAS_SIZE_H / spacing);
-
-//   // Reset the pattern and draw the initial grid
-//   resetPattern();
-//   drawInitialGrid();
-
-//   // Start drawing again
-//   drawingComplete = false; // Allow drawing to start again
-//   if (connected) {
-//     await drawKolamAsync(); // Start drawing again
-//   }
-// }
-
 async function resetAndRedraw() {
-  if (drawingComplete && !paused) {
-      // Mark as not complete to prevent re-triggers while drawing
-      drawingComplete = false;
+  // Clear the canvas and set new spacing
+  background("#E8E0D5");
+  spacing = int(random(6, 18))*10;
+  spacing = parseInt(spacing);
+  if (isNaN(spacing) || spacing <= 0) {
+    spacing = 50; // Fallback to a default value if input is invalid
+  }
 
-      // Clear the canvas and set new spacing
-      background(255);
-      spacing = int(random(6, 18)) * 10;
-      if (isNaN(spacing) || spacing <= 0) {
-          spacing = 50; // Fallback to default value if input is invalid
-      }
+  rows = Math.floor(P5_CANVAS_SIZE_W / spacing);
+  columns = Math.floor(P5_CANVAS_SIZE_H / spacing);
 
-      drawingLayer.clear();
-      resetPattern();
-      rows = Math.floor(P5_CANVAS_SIZE_W / spacing);
-      columns = Math.floor(P5_CANVAS_SIZE_H / spacing);
+  // Reset the pattern and draw the initial grid
+  resetPattern();
+  drawInitialGrid();
 
-      // Reset the pattern and draw the initial grid
-      resetPattern();
-      drawInitialGrid();
-
-      // Start drawing again if connected
-      if (connected) {
-          await drawKolamAsync();
-      }
+  // Start drawing again
+  drawingComplete = false; // Allow drawing to start again
+  if (connected) {
+    await drawKolamAsync(); // Start drawing again
   }
 }
-
 
 function draw() {
   //background(255); // Clear with white background
   
   // Draw the buffer layer
-  if (frameCount % randomInterval == 0) {
-    randomInterval = Math.floor(random(30, 1000)); // Reset the interval randomly each time
-    brush.stroke(random(palette)); // Choose a random brushstroke color
-  }
-  randomSeed(3);
-
   push();
   translate(-width / 2, -height / 2); // Translate to top-left for easier 2D drawing
   image(drawingLayer, 0, 0);
@@ -286,35 +206,10 @@ function draw() {
     updateDrawingParameters(data);
   }
 
-  if (connected && !paused && !drawingComplete && !axi.isBusy()) {
-    drawKolamAsync().then(() => {
-        drawingComplete = true; // Mark as complete once finished
-    });
-
-  }
-
-  if (connected && !paused && drawingComplete && !axi.isBusy()) {
+  if (connected && axi.isBusy()==false && !drawingComplete){
     resetAndRedraw();
-  }
-
-  // /// Define text properties
-  // let textContent = `Speed: ${currentSpeed}`;
-  // textSize(16);
-  // textAlign(RIGHT, TOP);
-  // let textWidthVal = textWidth(textContent);
-  // let textHeightVal = textSize() * 1.2;
-
-  // // Draw a rectangle behind the text
-  // noStroke();
-  // fill(255); // White background for better contrast
-  // rect(width - textWidthVal - 20, 5, textWidthVal + 20, textHeightVal);
-
-  // // Display current speed in the top-right corner
-  // fill(0); // Black text color
-  // text(textContent, width - 10, 10);
-
-  image(pullisLayer, -width/2, -height/2); // pullis layer
-} 
+    }
+}
 
 function updateDrawingParameters(data) {
   let edgeStrength = data[0];
@@ -322,17 +217,11 @@ function updateDrawingParameters(data) {
   // let avgGreen = int(map(data[2], 0, 255, 0, 255));
   // let avgBlue = int(map(data[3], 0, 255, 0, 255));
   let avgGrayscale = data[4];
-  let micval=data[6];
-
-  let color_i=(int(micval))%6;
-
 
   // Edge Strength → Control brushstroke thickness
-  brushThickness = map(edgeStrength, 3.5, 4.1, 0.5, 6);
+  brushThickness = map(edgeStrength, 0, 6, 1, 10);
   brush.strokeWeight(brushThickness);
-  //if (frameCount%100==0) brush.stroke(random(palette));
-  //brush.stroke(palette[color_i]);
-  console.log("COLOR", color_i)
+
   //107 113 110//61 55 61/213 188 128
   console.log("GRAYSCALE:", avgGrayscale);
   // // Color Averages (Red, Green, Blue) → Control Palette or Stroke Colors
@@ -342,22 +231,16 @@ function updateDrawingParameters(data) {
   // brush.stroke(color);
 
   // Grayscale Average → Which brush is selected
-  if (avgGrayscale < 30) {
-    selectedBrush = "cpencil";
-  } else if (avgGrayscale < 60) {
-    selectedBrush = "spray";
-  } else if (avgGrayscale < 120) {
+  if (avgGrayscale < 50) {
+    selectedBrush = "watercolor";
+  } else if (avgGrayscale < 100) {
+    selectedBrush = "marker";
+  } else {
     selectedBrush = "marker2";
   }
-  else if (avgGrayscale < 200) {
-    selectedBrush = "watercolor";
-  }
-  else if (avgGrayscale > 200) {
-    selectedBrush = "marker";
-  }
-  
   brush.pick(selectedBrush);
 }
+
 
 function parseSerialData(serialString) {
   serialString = serialString.trim();
@@ -372,7 +255,6 @@ async function mouseClicked() {
     connected = true;
     axi.setSpeed(currentSpeed);
   }
-
   
 }
 
@@ -421,37 +303,65 @@ function keyPressed() {
     console.log("Brush changed to charcoal");
   }
 
-  
-
-  else if (key=== 'p'){
-    if (connected){
+  else if (key === 'p') {
+    // Pause AxiDraw and return to home position
+    if (connected) {
       console.log("Pausing AxiDraw...", paused);
       paused = true; // Set pause flag to true
-      drawingComplete = true; // Allow drawing to start again
+      isDrawing = false; // Indicate that drawing is stopping
+      //  axi.penUp(); // Lift the pen
+      //  axi.moveTo(0, 0); // Move to home position
+    }
+  }
+  else if (key === 'l') {
+    // Pause AxiDraw and return to home position
+    if (connected) {
+      console.log("Unpausing AxiDraw...", paused);
+      paused = false; // Set pause flag to true
+      isDrawing = true; // Indicate that drawing is stopping
+      resetAndRedraw();
+      //  axi.penUp(); // Lift the pen
+      //  axi.moveTo(0, 0); // Move to home position
     }
   }
 
-  else if (key=== 'l'){
-    if (connected){
-      console.log("Unpausing AxiDraw...", paused);
-      drawingComplete = false; // Allow drawing to start again
-      paused = false; // Set pause flag to true
-      //resetAndRedraw();
+  else if (key === ' '){
+   if (connected){
+    paused=false;
+    drawKolamAsync();
+   } 
+  }
+
+  // else if (key === ' ') {
+  //   //     // Start the drawing when spacebar is pressed
+  //   //     // if (!drawingComplete) {
+  //   //     //   drawingComplete = false; // Reset flag to allow drawing to start
+  //   //     //   if (connected) {
+  //   //     //     await drawKolamAsync(); // Start drawing the kolam
+  //   //     //   }
+  //   //     //   console.log("Kolam drawin  g done. AxiDraw is paused.");
+  //   //     //   axi.penUp();
+  //   //     //   axi.moveTo(0, 0);
+  //   //     // }
+    
+  //       if (connected && !drawingStarted) {
+  //         drawingStarted = true; // Set flag to indicate drawing has started
+  //       }
+  //   //       drawingComplete = false; // Allow drawing to start
+  //   //       await drawKolamAsync(); // Start drawing the kolam
+  //   //       console.log("Kolam drawing started.");
+  //   //     }
+  //    }
+
+  else if (key === 'z') {
+    if(connected){
+      
+      
+      axi.penUp();
+      axi.moveTo(0, 0);
     }
   }
-  else if (keyCode==40){
-    if (connected){
-      console.log("pen down")
-      penDownforSetup=true;
-     axi.penDown();
-    }
-  }
-  else if (keyCode==38){
-    if (connected){
-      console.log("pen up")
-     axi.penUp();
-    }
-  }
+
   // else if (key===' '){
   //   if (!drawingComplete) {
   //     // drawingComplete = true; // Set drawing as started
@@ -493,15 +403,15 @@ function keyPressed() {
     drawRev = true; // Lift the pen after drawing
     console.log("Reverse enabled");
   }
-  // else if (keyCode === UP_ARROW) {
-  //   brushScale = Math.min(brushScale + 0.5, 10); // Increase spacing, max 100 to prevent excessive gaps
-  //   resetPattern();
-  //   console.log("Spacing increased:", spacing);
-  // } else if (keyCode === DOWN_ARROW) {
-  //   brushScale = Math.max(brushScale - 0.5, 0.5); // Decrease spacing, min 20 to prevent overlap
-  //   resetPattern();
-  //   console.log("Spacing decreased:", spacing);
-  // } 
+  else if (keyCode === UP_ARROW) {
+    brushScale = Math.min(brushScale + 0.5, 10); // Increase spacing, max 100 to prevent excessive gaps
+    resetPattern();
+    console.log("Spacing increased:", spacing);
+  } else if (keyCode === DOWN_ARROW) {
+    brushScale = Math.max(brushScale - 0.5, 0.5); // Decrease spacing, min 20 to prevent overlap
+    resetPattern();
+    console.log("Spacing decreased:", spacing);
+  } 
   // else if (keyCode === LEFT_ARROW) {
   //   rows = Math.max(rows - 1, 5); // Decrease rows, minimum value of 5
   //   resetPattern();
@@ -521,12 +431,104 @@ function keyPressed() {
 
 }
 
+// async function keyPressed() {
+//   if (key === '0') {
+//     currentSpeed = Math.min(70, currentSpeed + 2); // Increase speed by 2, max speed is 70
+//   } else if (key === '9') {
+//     currentSpeed = Math.max(10, currentSpeed - 2); // Decrease speed by 2, minimum speed is 10
+//   } else if (key === 'q') {
+//     brush.pick("watercolor"); // Change to cpencil brush
+//     console.log("Brush changed to cpencil");
+//   } else if (key === 'w') {
+//     brush.pick("marker"); // Change to marker brush
+//     console.log("Brush changed to marker");
+//   } else if (key === 'e') {
+//     brush.pick("marker2"); // Change to charcoal brush
+//     console.log("Brush changed to charcoal");
+//   } else if (key === 'r') {
+//     brush.pick("cpencil"); // Change to charcoal brush
+//     console.log("Brush changed to charcoal");
+//   } else if (key === 't') {
+//     brush.pick("pen"); // Change to charcoal brush
+//     console.log("Brush changed to charcoal");
+//   } else if (key === 'y') {
+//     brush.pick("spray"); // Change to charcoal brush
+//     console.log("Brush changed to charcoal");
+//   } else if (key === 'u') {
+//     brush.pick("rotring"); // Change to charcoal brush
+//     console.log("Brush changed to charcoal");
+//   } else if (key === 'i') {
+//     brush.pick("2B"); // Change to charcoal brush
+//     console.log("Brush changed to charcoal");
+//   } else if (key === 'z') {
+//     if (connected) {
+//       axi.penUp();
+//       axi.moveTo(0, 0);
+//     }
+//   } 
+//   else if (key === 'p') {
+//     // Pause AxiDraw and return to home position
+//     if (connected && isDrawing) {
+//       console.log("Pausing AxiDraw...");
+//       // paused = true; // Set pause flag to true
+//       // isDrawing = false; // Indicate that drawing is stopping
+//       // await axi.penUp(); // Lift the pen
+//       // await axi.moveTo(0, 0); // Move to home position
+//     }
+//   }
+//   else if (key === ' ') {
+//     // Start the drawing when spacebar is pressed
+//     // if (!drawingComplete) {
+//     //   drawingComplete = false; // Reset flag to allow drawing to start
+//     //   if (connected) {
+//     //     await drawKolamAsync(); // Start drawing the kolam
+//     //   }
+//     //   console.log("Kolam drawin  g done. AxiDraw is paused.");
+//     //   axi.penUp();
+//     //   axi.moveTo(0, 0);
+//     // }
+
+//     if (connected && !drawingStarted) {
+//       drawingStarted = true; // Set flag to indicate drawing has started
+//       drawingComplete = false; // Allow drawing to start
+//       await drawKolamAsync(); // Start drawing the kolam
+//       console.log("Kolam drawing started.");
+//     }
+//   }
+
+//   if ('123456789'.includes(key)) {
+//     brush.strokeWeight(key);
+//   } else if (key === 'a') {
+//     liftPen = false; // Don't lift the pen
+//     console.log("Pen down mode (continuous drawing)");
+//   } else if (key === 's') {
+//     liftPen = true; // Lift the pen after drawing
+//     console.log("Pen lift mode enabled");
+//   } else if (key === 'm') {
+//     drawRev = true; // Enable reverse drawing
+//     console.log("Reverse enabled");
+//   } else if (keyCode === UP_ARROW) {
+//     brushScale = Math.min(brushScale + 0.5, 10); // Increase spacing, max 100 to prevent excessive gaps
+//     resetPattern();
+//     console.log("Spacing increased:", spacing);
+//   } else if (keyCode === DOWN_ARROW) {
+//     brushScale = Math.max(brushScale - 0.5, 0.5); // Decrease spacing, min 20 to prevent overlap
+//     resetPattern();
+//     console.log("Spacing decreased:", spacing);
+//   }
+
+//   if (connected) {
+//     axi.setSpeed(currentSpeed); // Update the AxiDraw speed dynamically
+//     console.log("Updated speed:", currentSpeed);
+//   }
+// }
+
 
 
 function touchMoved() {
   // Allow drawing directly on the main WEBGL canvas
   
-  //if (frameCount%colUpdate==0) brush.stroke(random(palette));
+  if (frameCount%100==0) brush.stroke(random(palette));
   strokeWeight(2);
   brush.line(pmouseX - width / 2, pmouseY - height / 2, mouseX - width / 2, mouseY - height / 2); // Adjust coordinates for WEBGL
   return false; // Prevent default scrolling behavior
@@ -571,7 +573,7 @@ function drawKolam(i, isReverse) {
     let prevA = angleArray[i - 1] || 0; // If i === 0, use default prevA value
     let aDiff = curA - prevA;
 
-  if (connected && !paused) {
+  if (connected && paused===false) {
   if (i === 0) {
     //drawLineByAngle(angleDegrees, tempX, tempY, spacing, true);
     stroke(0, 0, 255);
@@ -587,29 +589,29 @@ function drawKolam(i, isReverse) {
          if (i % 2 === 1 && isReverse==false || i % 2 === 0 && isReverse==true) 
         {
             if (aDiff === 90 || aDiff === -270) {
-              drawLineByAngle(angleDegrees, tempX, tempY, spacing);
+                //drawLineByAngle(angleDegrees, tempX, tempY, spacing);
                drawLineByAngleAxidraw(angleDegrees, tempX, tempY, spacing);
               
             } else {
-               applyLoopAndStroke(aDiff, r_angle, dot1);
+               // applyLoopAndStroke(aDiff, r_angle, dot1);
                applyLoopAndStrokeAxidraw(aDiff, r_angle, dot1);
-               drawLineByAngle(angleDegrees, tempX, tempY, spacing);
+               // drawLineByAngle(angleDegrees, tempX, tempY, spacing);
                drawLineByAngleAxidraw(angleDegrees, tempX, tempY, spacing);
             }
         } 
     else {
             if (aDiff === 90 || aDiff === -270) {
-               applyLoopAndStroke(aDiff, r_angle, dot1);
+               // applyLoopAndStroke(aDiff, r_angle, dot1);
               applyLoopAndStrokeAxidraw(aDiff, r_angle, dot1);
-               drawLineByAngle(angleDegrees, tempX, tempY, spacing, true);
+              // drawLineByAngle(angleDegrees, tempX, tempY, spacing, true);
                 drawLineByAngleAxidraw(angleDegrees, tempX, tempY, spacing, true);
             } else if (aDiff === -90 || aDiff === 270) {
-              drawLineByAngle(angleDegrees, tempX, tempY, spacing, true);
+                //drawLineByAngle(angleDegrees, tempX, tempY, spacing, true);
               drawLineByAngleAxidraw(angleDegrees, tempX, tempY, spacing, true);
             } else if (aDiff === 0) {
-              applyLoopAndStroke(aDiff, r_angle + PI, dot1);
+                //applyLoopAndStroke(aDiff, r_angle + PI, dot1);
               applyLoopAndStrokeAxidraw(aDiff, r_angle + PI, dot1);
-              drawLineByAngle(angleDegrees, tempX, tempY, spacing, true);
+               //drawLineByAngle(angleDegrees, tempX, tempY, spacing, true);
               drawLineByAngleAxidraw(angleDegrees, tempX, tempY, spacing, true);
             }
         }
@@ -630,12 +632,12 @@ function drawKolam(i, isReverse) {
     
     }
 
-    else if (connected && paused){
-     
-        if (penDownforSetup==false)axi.penUp();
-        axi.moveTo(0, 0);
-        return;
+    else if (connected && paused==true){
+      axi.penUp();
+      axi.moveTo(0, 0);
     }
+
+
   
  
 }
@@ -669,10 +671,8 @@ function resetPattern() {
   // framework = connectpullis();
   let temp=[];
   pullis = temp;
-  let border=30;
   let xOffset = (P5_CANVAS_SIZE_W - (rows * spacing)) / 2 + spacing / 2;
   let yOffset = (P5_CANVAS_SIZE_H - (columns * spacing)) / 2 + spacing / 2;
-  
 
 
   for (let i = 0; i < rows; i++) {

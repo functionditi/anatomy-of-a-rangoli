@@ -121,7 +121,7 @@ brush.pick(selectedBrush);
   
 brushColor=random(palette)
   //background("#F3F0EB");
-  background("#fff");
+  background("#FFF");
   drawInitialGrid();
 }
 
@@ -240,7 +240,7 @@ async function resetAndRedraw() {
       drawingComplete = false;
 
       // Clear the canvas and set new spacing
-      background(255);
+      background("#FFF");
       spacing = int(random(6, 18)) * 10;
       if (isNaN(spacing) || spacing <= 0) {
           spacing = 50; // Fallback to default value if input is invalid
@@ -328,7 +328,7 @@ function updateDrawingParameters(data) {
 
 
   // Edge Strength → Control brushstroke thickness
-  brushThickness = map(edgeStrength, 3.5, 4.1, 0.5, 6);
+  brushThickness = map(edgeStrength, 0, 6, 1, 5);
   brush.strokeWeight(brushThickness);
   //if (frameCount%100==0) brush.stroke(random(palette));
   //brush.stroke(palette[color_i]);
@@ -343,17 +343,17 @@ function updateDrawingParameters(data) {
 
   // Grayscale Average → Which brush is selected
   if (avgGrayscale < 30) {
-    selectedBrush = "cpencil";
+    selectedBrush = "watercolor";
   } else if (avgGrayscale < 60) {
-    selectedBrush = "spray";
+    selectedBrush = "marker";
   } else if (avgGrayscale < 120) {
     selectedBrush = "marker2";
   }
   else if (avgGrayscale < 200) {
-    selectedBrush = "watercolor";
+    selectedBrush = "cpencil";
   }
-  else if (avgGrayscale > 200) {
-    selectedBrush = "marker";
+  else if (avgGrayscale < 230) {
+    selectedBrush = "spray";
   }
   
   brush.pick(selectedBrush);
@@ -587,29 +587,29 @@ function drawKolam(i, isReverse) {
          if (i % 2 === 1 && isReverse==false || i % 2 === 0 && isReverse==true) 
         {
             if (aDiff === 90 || aDiff === -270) {
-              drawLineByAngle(angleDegrees, tempX, tempY, spacing);
+                //drawLineByAngle(angleDegrees, tempX, tempY, spacing);
                drawLineByAngleAxidraw(angleDegrees, tempX, tempY, spacing);
               
             } else {
-               applyLoopAndStroke(aDiff, r_angle, dot1);
+               // applyLoopAndStroke(aDiff, r_angle, dot1);
                applyLoopAndStrokeAxidraw(aDiff, r_angle, dot1);
-               drawLineByAngle(angleDegrees, tempX, tempY, spacing);
+               // drawLineByAngle(angleDegrees, tempX, tempY, spacing);
                drawLineByAngleAxidraw(angleDegrees, tempX, tempY, spacing);
             }
         } 
     else {
             if (aDiff === 90 || aDiff === -270) {
-               applyLoopAndStroke(aDiff, r_angle, dot1);
+               // applyLoopAndStroke(aDiff, r_angle, dot1);
               applyLoopAndStrokeAxidraw(aDiff, r_angle, dot1);
-               drawLineByAngle(angleDegrees, tempX, tempY, spacing, true);
+              // drawLineByAngle(angleDegrees, tempX, tempY, spacing, true);
                 drawLineByAngleAxidraw(angleDegrees, tempX, tempY, spacing, true);
             } else if (aDiff === -90 || aDiff === 270) {
-              drawLineByAngle(angleDegrees, tempX, tempY, spacing, true);
+                //drawLineByAngle(angleDegrees, tempX, tempY, spacing, true);
               drawLineByAngleAxidraw(angleDegrees, tempX, tempY, spacing, true);
             } else if (aDiff === 0) {
-              applyLoopAndStroke(aDiff, r_angle + PI, dot1);
+                //applyLoopAndStroke(aDiff, r_angle + PI, dot1);
               applyLoopAndStrokeAxidraw(aDiff, r_angle + PI, dot1);
-              drawLineByAngle(angleDegrees, tempX, tempY, spacing, true);
+               //drawLineByAngle(angleDegrees, tempX, tempY, spacing, true);
               drawLineByAngleAxidraw(angleDegrees, tempX, tempY, spacing, true);
             }
         }
@@ -669,10 +669,8 @@ function resetPattern() {
   // framework = connectpullis();
   let temp=[];
   pullis = temp;
-  let border=30;
   let xOffset = (P5_CANVAS_SIZE_W - (rows * spacing)) / 2 + spacing / 2;
   let yOffset = (P5_CANVAS_SIZE_H - (columns * spacing)) / 2 + spacing / 2;
-  
 
 
   for (let i = 0; i < rows; i++) {
