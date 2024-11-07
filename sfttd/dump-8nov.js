@@ -32,7 +32,13 @@ let penDownforSetup=false;
 let drawingLayer;
 
 let palette=[];
+//palette.push("#F0E9E1");
 
+//browns and green
+// palette.push("#736049");
+// palette.push("#261F13");
+// palette.push("#A69E86");
+// palette.push("#736B43");
 
 //ornages and blues
 palette.push("#3C4884");
@@ -44,13 +50,16 @@ let brushScale=1;
 let brushThickness = 2;
 let brushColor;
 let selectedBrush = "marker2";
-let selectedColor;
 
-let startX=0, startY=0;
 
-const MAX_X_MM = 225; // 15 cm in mm
-const MAX_Y_MM = 155; // 15 cm in mm
-
+const MAX_X_MM = 210; // 15 cm in mm
+//const MAX_X_MM = 100; // 15 cm in mm
+const MAX_Y_MM = 120; // 15 cm in mm
+// const MAX_X_MM = 90; // 15 cm in mm
+// const MAX_Y_MM = 90; // 15 cm in mm
+// const P5_CANVAS_SIZE_W = (rows + 1) * spacing; 
+// const P5_CANVAS_SIZE_H = (columns + 1) * spacing; 
+// const P5_CANVAS_SIZE = (size + 1) * spacing; 
 
 const P5_CANVAS_SIZE_W = 1178; 
 const P5_CANVAS_SIZE_H = 815;
@@ -61,8 +70,9 @@ const P5_CANVAS_SIZE_H = 815;
 function setup() {
   
   createCanvas(P5_CANVAS_SIZE_W, P5_CANVAS_SIZE_H, WEBGL);
+  //console.log(P5_CANVAS_SIZE_W, P5_CANVAS_SIZE_H, P5_CANVAS_SIZE);
 
-  spacing = 120;
+  spacing = 240;
   rows = Math.floor(P5_CANVAS_SIZE_W / spacing) - 1;
   columns = Math.floor(P5_CANVAS_SIZE_H / spacing) - 1;
 
@@ -116,7 +126,7 @@ brushColor=random(palette)
 }
 
 function drawInitialGrid() {
-  
+  // push();
    brush.push();
   fill(0);
   stroke(255, 140, 0);
@@ -127,15 +137,58 @@ function drawInitialGrid() {
     brush.scaleBrushes(1);
     brush.strokeWeight(0.5);
     brush.pick("marker");
-    brush.circle(pullis[i].x - width / 2, pullis[i].y - height / 2, 4); // Adjusting positions for WEBGL
+    brush.circle(pullis[i].x - width / 2, pullis[i].y - height / 2, 1, 1); // Adjusting positions for WEBGL
     //brush.rect(pullis[i].x - width / 2, pullis[i].y - height / 2, spacing, spacing, CENTER);
     //brush.pop();
   }
    brush.pop();
- 
+  // pop();
+
+  
+  // brush.scaleBrushes(brushScale);
+  // brush.strokeWeight(brushThickness);
+
+//   pullisLayer.fill(0);
+//   pullisLayer.stroke(255, 140, 0);
+//   pullisLayer.strokeWeight(2);
+//   pullisLayer.noFill();
+  
+//   pullisLayer.push();
+//  // pullisLayer.translate(-width/2, -height/2)
+//   for (let i = 0; i < pullis.length; i++) {
+//     // Draw each pulli on the pullisLayer
+//     pullisLayer.circle(pullis[i].x , pullis[i].y , 5); // Adjusting positions for WEBGL
+//   }
+//   pullisLayer.pop();
 }
 
+// function drawKolamAsync() {
+//   return new Promise(async (resolve) => {
+//     for (let i = 0; i < framework.length; i++) {
+//       await drawKolamAsyncHelper(i, false);
+//     }
+    
+//     // Resolve once the first Kolam drawing is complete and pause
+//     console.log("Kolam drawing complete. Pausing AxiDraw.");
+//     resolve();
+//     drawingComplete = true; // Indicate drawing is complete to prevent further actions
+  
+    
+    
 
+    
+//     // setTimeout(() => {
+      
+//     // }, 1000); // Adjust delay
+
+//     // Optional: Disconnect the AxiDraw to ensure it's in idle mode
+//     // if (connected) {
+//     //   await axi.disconnect();
+//     //   connected = false;
+//     //   console.log("AxiDraw disconnected to pause and chill.");
+//     // }
+//   });
+// }
 
 async function drawKolamAsync() {
   for (let i = 0; i < framework.length; i++) {
@@ -156,6 +209,30 @@ function drawKolamAsyncHelper(i, isReverse) {
   });
 }
 
+// async function resetAndRedraw() {
+//   // Clear the canvas and set new spacing
+//   background("#FFF");
+//   spacing = int(random(6, 18))*10;
+//   spacing = parseInt(spacing);
+//   if (isNaN(spacing) || spacing <= 0) {
+//     spacing = 50; // Fallback to a default value if input is invalid
+//   }
+
+//    drawingLayer.clear();
+//   resetPattern();
+//   rows = Math.floor(P5_CANVAS_SIZE_W / spacing);
+//   columns = Math.floor(P5_CANVAS_SIZE_H / spacing);
+
+//   // Reset the pattern and draw the initial grid
+//   resetPattern();
+//   drawInitialGrid();
+
+//   // Start drawing again
+//   drawingComplete = false; // Allow drawing to start again
+//   if (connected) {
+//     await drawKolamAsync(); // Start drawing again
+//   }
+// }
 
 async function resetAndRedraw() {
   if (drawingComplete && !paused) {
@@ -164,12 +241,7 @@ async function resetAndRedraw() {
 
       // Clear the canvas and set new spacing
       background(255);
-     spacing = int(random(6, 20)) * 10;
-     axi.moveTo(startX, startY);
-     startX+=2;
-     startY+=2;
-     //spacing=120;
-     
+      spacing = int(random(6, 18)) * 10;
       if (isNaN(spacing) || spacing <= 0) {
           spacing = 50; // Fallback to default value if input is invalid
       }
@@ -195,12 +267,10 @@ function draw() {
   //background(255); // Clear with white background
   
   // Draw the buffer layer
-  // if (frameCount % randomInterval == 0) {
-  //   randomInterval = Math.floor(random(30, 1000)); // Reset the interval randomly each time
-  //   brush.stroke(random(palette)); // Choose a random brushstroke color
-  // }
-
-  brush.stroke(selectedColor); // Set brush color with calculated opacity
+  if (frameCount % randomInterval == 0) {
+    randomInterval = Math.floor(random(30, 1000)); // Reset the interval randomly each time
+    brush.stroke(random(palette)); // Choose a random brushstroke color
+  }
   randomSeed(3);
 
   push();
@@ -227,68 +297,67 @@ function draw() {
     resetAndRedraw();
   }
 
+  // /// Define text properties
+  // let textContent = `Speed: ${currentSpeed}`;
+  // textSize(16);
+  // textAlign(RIGHT, TOP);
+  // let textWidthVal = textWidth(textContent);
+  // let textHeightVal = textSize() * 1.2;
+
+  // // Draw a rectangle behind the text
+  // noStroke();
+  // fill(255); // White background for better contrast
+  // rect(width - textWidthVal - 20, 5, textWidthVal + 20, textHeightVal);
+
+  // // Display current speed in the top-right corner
+  // fill(0); // Black text color
+  // text(textContent, width - 10, 10);
+
   image(pullisLayer, -width/2, -height/2); // pullis layer
 } 
 
 function updateDrawingParameters(data) {
   let edgeStrength = data[0];
-  let avgRed = int(map(data[1], 0, 255, 0, 255));
-  let avgGreen = int(map(data[2], 0, 255, 0, 255));
-  let avgBlue = int(map(data[3], 0, 255, 0, 255));
+  // let avgRed = int(map(data[1], 0, 255, 0, 255));
+  // let avgGreen = int(map(data[2], 0, 255, 0, 255));
+  // let avgBlue = int(map(data[3], 0, 255, 0, 255));
   let avgGrayscale = data[4];
-  let stdDevGrayscale = data[5];
-  let micval = data[6];
-  let color_i = int(micval) % 5; // Using modulus to get a valid index for palette array (5 elements)
+  let micval=data[6];
 
-
-  let scalebrush = map(stdDevGrayscale, 40, 50, 1, 2); // Mapping stdDevGrayscale to opacity range (50% to 100%)
+  let color_i=(int(micval))%6;
 
 
   // Edge Strength → Control brushstroke thickness
-  brushThickness = map(edgeStrength, 4.1, 4.3, 1, 8*scalebrush);
-  
+  brushThickness = map(edgeStrength, 3.5, 4.1, 0.5, 6);
+  brush.strokeWeight(brushThickness);
+  //if (frameCount%100==0) brush.stroke(random(palette));
+  //brush.stroke(palette[color_i]);
+  console.log("COLOR", color_i)
+  //107 113 110//61 55 61/213 188 128
+  console.log("GRAYSCALE:", avgGrayscale);
+  // // Color Averages (Red, Green, Blue) → Control Palette or Stroke Colors
+  // let thecolor;
+  // if (avgRed)  thecolor = color(avgRed, avgGreen, avgBlue)
+  // else color=random(palette);
+  // brush.stroke(color);
 
   // Grayscale Average → Which brush is selected
-  if (avgGrayscale <= 80) {
-    selectedBrush = "spray";
-    brushThickness = brushThickness / 6;
-  } else if (avgGrayscale <= 110) {
-    selectedBrush = "rotring";
-  } else if (avgGrayscale <= 143) {
-    selectedBrush = "marker";
-    brushThickness = brushThickness / 2;
-  } else if (avgGrayscale <= 146) {
+  if (avgGrayscale < 30) {
     selectedBrush = "cpencil";
-    brushThickness = brushThickness / 2;
-  } else if (avgGrayscale <= 150) {
-    selectedBrush = "watercolor";
-  } else if (avgGrayscale > 150) {
+  } else if (avgGrayscale < 60) {
+    selectedBrush = "spray";
+  } else if (avgGrayscale < 120) {
     selectedBrush = "marker2";
-    brushThickness = brushThickness / 3;
   }
-
-  // Use micval to pick a color from the palette array
-  selectedColor = palette[color_i];
-  
-  console.log("COLOR", selectedColor);
-  console.log("GRAYSCALE:", avgGrayscale);
-  console.log("BRUSH:", brushThickness)
-  // Set brush opacity based on stdDevGrayscale
-  
-  if (micval > 400) {
-    liftPen = true;
-    currentSpeed = 70;
-  } else {
-    liftPen = false;
-    currentSpeed = 40;
+  else if (avgGrayscale < 200) {
+    selectedBrush = "watercolor";
   }
-
-  // Apply brush properties
-  brush.strokeWeight(brushThickness);
-  brush.stroke(selectedColor); // Set brush color with calculated opacity
+  else if (avgGrayscale > 200) {
+    selectedBrush = "marker";
+  }
+  
   brush.pick(selectedBrush);
 }
-
 
 function parseSerialData(serialString) {
   serialString = serialString.trim();
@@ -309,7 +378,7 @@ async function mouseClicked() {
 
 function doubleClicked() {
   if (!port.opened()) {
-    port.open(9600);
+    port.open(57600);
   } 
   // else {
   //   port.close();
@@ -383,7 +452,31 @@ function keyPressed() {
      axi.penUp();
     }
   }
+  // else if (key===' '){
+  //   if (!drawingComplete) {
+  //     // drawingComplete = true; // Set drawing as started
   
+  //     // await drawKolamAsync(); // Wait for the entire Kolam to be drawn
+  
+  //     // // Once drawing is complete, reset the pattern
+  //     // resetPattern();
+  //     // drawingComplete = false;
+  //     // arcDrawn = false; // Reset the arc flag to allow drawing again
+  //     // lineMarkers = [];
+  //     // angleArray = [];
+  //     // console.log("Pattern reset");
+  
+  //     drawingComplete = true; // Set drawing as started
+      
+  
+  //     drawKolamAsync(); // Wait for the entire Kolam to be drawn
+  
+  
+  //     console.log("Kolam drawing done. AxiDraw is paused.");
+  //     axi.penUp();
+  //     axi.moveTo(0, 0);
+  //   }
+  // }
 
   if ('123456789'.includes(key)) {
     brush.strokeWeight(key);
@@ -400,6 +493,25 @@ function keyPressed() {
     drawRev = true; // Lift the pen after drawing
     console.log("Reverse enabled");
   }
+  // else if (keyCode === UP_ARROW) {
+  //   brushScale = Math.min(brushScale + 0.5, 10); // Increase spacing, max 100 to prevent excessive gaps
+  //   resetPattern();
+  //   console.log("Spacing increased:", spacing);
+  // } else if (keyCode === DOWN_ARROW) {
+  //   brushScale = Math.max(brushScale - 0.5, 0.5); // Decrease spacing, min 20 to prevent overlap
+  //   resetPattern();
+  //   console.log("Spacing decreased:", spacing);
+  // } 
+  // else if (keyCode === LEFT_ARROW) {
+  //   rows = Math.max(rows - 1, 5); // Decrease rows, minimum value of 5
+  //   resetPattern();
+  //   console.log("Rows decreased:", rows);
+  // } else if (keyCode === RIGHT_ARROW) {
+  //   rows = Math.min(rows + 1, 30); // Increase rows, maximum value of 30
+  //   resetPattern();
+  //   console.log("Rows increased:", rows);
+  // }
+
 
   if (connected) {
     axi.setSpeed(currentSpeed); // Update the AxiDraw speed dynamically
@@ -521,7 +633,7 @@ function drawKolam(i, isReverse) {
     else if (connected && paused){
      
         if (penDownforSetup==false)axi.penUp();
-        axi.moveTo(startX, startY);
+        axi.moveTo(0, 0);
         return;
     }
   
@@ -546,18 +658,22 @@ class Dot {
 }
 
 function resetPattern() {
-  let temp = [];
+  // pullis = [];
+  // for (let i = 0; i < rows; i++) {
+  //   for (let j = 0; j < columns; j++) {
+  //     pullis.push(new Dot(i * spacing + spacing, j * spacing + spacing));
+  //   }
+  // }
+
+  // shuffle(pullis, true);
+  // framework = connectpullis();
+  let temp=[];
   pullis = temp;
-  let border = 80; // for example, a bigger border of 50px
-  let availableWidth = P5_CANVAS_SIZE_W - 2 * border;
-  let availableHeight = P5_CANVAS_SIZE_H - 2 * border;
+  let border=30;
+  let xOffset = (P5_CANVAS_SIZE_W - (rows * spacing)) / 2 + spacing / 2;
+  let yOffset = (P5_CANVAS_SIZE_H - (columns * spacing)) / 2 + spacing / 2;
+  
 
-  // Calculate rows and columns based on the available space and spacing
-  let rows = Math.floor(availableWidth / spacing);
-  let columns = Math.floor(availableHeight / spacing);
-
-  let xOffset = border + (availableWidth - (rows * spacing)) / 2 + spacing / 2;
-  let yOffset = border + (availableHeight - (columns * spacing)) / 2 + spacing / 2;
 
   for (let i = 0; i < rows; i++) {
     for (let j = 0; j < columns; j++) {
@@ -567,8 +683,6 @@ function resetPattern() {
   shuffle(pullis, true);
   framework = connectpullis();
 }
-
-
 
 
 
@@ -689,9 +803,9 @@ function drawDiagonalLineAxidraw(midX, midY, lineLength, angle) {
   let y2 = midY + sin(angle) * lineLength;
  
   //line(x1, y1, x2, y2);
-   axi.moveTo(x1+startX, y1+startY);
+   axi.moveTo(x1, y1);
   axi.penDown();
-   axi.moveTo(x2+startX, y2+startY);
+   axi.moveTo(x2, y2);
   if (liftPen) axi.penUp();
 }
 
@@ -710,9 +824,16 @@ function loopAround(dot, theAngle, start, stop) {
 
 function loopAroundAxidraw(theX, theY, theAngle, start, stop) {
   
+  //mappedPos.x, mappedPos.y, r_angle, PI / 4, PI * 7 / 4
+  // Draw an arc around the given dot, in the direction of the line segment
+//   push();
+//   translate(theX, theY);
+//   rotate(theAngle);
+//   noFill();
+  
   let mappedPos = mapToAxiDraw(theX, theY);
   if (liftPen) axi.penUp();
-      axi.moveTo(mappedPos.x + startX, mappedPos.y + startY);
+      axi.moveTo(mappedPos.x, mappedPos.y);
  
   let aRad=map(spacing * 0.33, 0, P5_CANVAS_SIZE_W, 0, MAX_X_MM);
   
@@ -728,14 +849,14 @@ function drawArc(x, y, radius, startAngle, endAngle, pointCount = 16) {
 
   const x1 = radius * cos(startAngle);
   const y1 = radius * sin(startAngle);
-  axi.moveTo(x + x1 +startX, y + y1 +startY);
+  axi.moveTo(x + x1, y + y1);
   axi.penDown();
 
   for (let i = 0; i <= pointCount; i += 1) {
     const angle = startAngle + i * angleInc;
     const relX = radius * cos(angle);
     const relY = radius * sin(angle);
-    axi.moveTo(x + relX +startX, y + relY +startY);
+    axi.moveTo(x + relX, y + relY);
   }
 
   if (liftPen) axi.penUp();
