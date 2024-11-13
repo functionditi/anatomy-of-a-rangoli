@@ -175,11 +175,11 @@ async function resetAndRedraw() {
      startX+=2;
      startY+=2;
 
-     console.log("fc:", frameCount, startX, startY)
-     if(frameCount%15000==0){
-      startX+=8;
-      startY+=8;
-     }
+    //  console.log("fc:", frameCount, startX, startY)
+    //  if(frameCount%15000==0){
+    //   startX+=8;
+    //   startY+=8;
+    //  }
     //  if(frameCount%300000==0){
     //   startX+=16;
     //   startY+=16;
