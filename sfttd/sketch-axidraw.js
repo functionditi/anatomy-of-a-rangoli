@@ -67,7 +67,7 @@ function setup() {
   
   createCanvas(P5_CANVAS_SIZE_W, P5_CANVAS_SIZE_H, WEBGL);
 
-  spacing =120;
+  spacing = 200;
   rows = Math.floor(P5_CANVAS_SIZE_W / spacing) - 1;
   columns = Math.floor(P5_CANVAS_SIZE_H / spacing) - 1;
 
@@ -170,15 +170,25 @@ async function resetAndRedraw() {
 
       // Clear the canvas and set new spacing
       background(255);
-     spacing = int(random(7, 20)) * 10;
+     spacing = int(random(8, 26)) * 10;
      axi.moveTo(startX, startY);
      startX+=2;
      startY+=2;
+
+     console.log("fc:", frameCount, startX, startY)
+     if(frameCount%15000==0){
+      startX+=8;
+      startY+=8;
+     }
+    //  if(frameCount%300000==0){
+    //   startX+=16;
+    //   startY+=16;
+    //  }
      //spacing=120;
      
-      if (isNaN(spacing) || spacing <= 0) {
-          spacing = 50; // Fallback to default value if input is invalid
-      }
+      // if (isNaN(spacing) || spacing <= 0) {
+      //     spacing = 50; // Fallback to default value if input is invalid
+      // }
 
       drawingLayer.clear();
       resetPattern();
@@ -207,7 +217,7 @@ function draw() {
   // }
 
   brush.stroke(selectedColor); // Set brush color with calculated opacity
-  randomSeed(3);
+  //randomSeed(3);
 
   // push();
   // translate(-width / 2, -height / 2); // Translate to top-left for easier 2D drawing
@@ -259,28 +269,28 @@ function updateDrawingParameters(data) {
   let color_i = int(micval) % 6; // Using modulus to get a valid index for palette array (5 elements)
 
 
-  let scalebrush = map(stdDevGrayscale, 40, 50, 1, 2); // Mapping stdDevGrayscale to opacity range (50% to 100%)
-
+  let scalebrush = map(spacing, 40, 200, 0.5, 2) +random(0.05, 1.5) + map(stdDevGrayscale, 48, 55, 0.5, 1); // Mapping stdDevGrayscale to opacity range (50% to 100%)
+  // spacing = int(random(4, 20)) * 10;
 
   // Edge Strength → Control brushstroke thickness
-  brushThickness = map(edgeStrength, 4.1, 4.3, 1, 4*scalebrush);
+  brushThickness = map(edgeStrength, 3, 4.3, 1, 6*scalebrush, true);
   
 
   // Grayscale Average → Which brush is selected
   if (avgGrayscale <= 80) {
     selectedBrush = "spray";
     brushThickness = brushThickness / 6;
-  } else if (avgGrayscale <= 110) {
+  } else if (avgGrayscale <= 100) {
     selectedBrush = "rotring";
-  } else if (avgGrayscale <= 143) {
-    selectedBrush = "marker";
-    brushThickness = brushThickness / 2;
-  } else if (avgGrayscale <= 146) {
+  } else if (avgGrayscale <= 115) {
     selectedBrush = "cpencil";
     brushThickness = brushThickness / 2;
-  } else if (avgGrayscale <= 150) {
+  } else if (avgGrayscale <= 165) {
     selectedBrush = "watercolor";
-  } else if (avgGrayscale > 150) {
+    brushThickness = brushThickness / 2;
+  } else if (avgGrayscale <= 200) {
+    selectedBrush = "marker";
+  } else if (avgGrayscale > 200) {
     selectedBrush = "marker2";
     brushThickness = brushThickness / 3;
   }
@@ -293,7 +303,7 @@ function updateDrawingParameters(data) {
   console.log("BRUSH:", brushThickness)
   // Set brush opacity based on stdDevGrayscale
   
-  if (micval > 400) {
+  if (micval > 200) {
     liftPen = true;
     currentSpeed = 70;
   } else {
@@ -443,12 +453,12 @@ function drawKolam(i, isReverse) {
   let dot1 = pullis[framework[i].x];
   let dot2 = pullis[framework[i].y];
   stroke(225);
-  push();
-  translate(- width / 2, -height /2)
-  strokeWeight(2);
-  stroke(255, 0, 0);
-  line(dot1.x, dot1.y, dot2.x, dot2.y);
-  pop();
+  // push();
+  // translate(- width / 2, -height /2)
+  // strokeWeight(2);
+  // stroke(255, 0, 0);
+  // line(dot1.x, dot1.y, dot2.x, dot2.y);
+  // pop();
 
   let tempX = (dot1.x + dot2.x) / 2;
   let tempY = (dot1.y + dot2.y) / 2;
@@ -549,10 +559,15 @@ function drawKolam(i, isReverse) {
 }
 
 function mapToAxiDraw(x, y) {
-  // Map p5 coordinates to AxiDraw coordinates (15x15 cm area)
-  let mappedX = map(x, 0, P5_CANVAS_SIZE_W, 0, MAX_X_MM);
-  let mappedY = map(y, 0, P5_CANVAS_SIZE_H, 0, MAX_Y_MM);
-  return createVector(mappedX, mappedY);
+   // Map p5 coordinates to AxiDraw coordinates (15x15 cm area)
+   let mappedX = map(x, 0, P5_CANVAS_SIZE_W, 0, MAX_X_MM);
+   let mappedY = map(y, 0, P5_CANVAS_SIZE_H, 0, MAX_Y_MM);
+ 
+   // Clamp the mapped coordinates to ensure they are within AxiDraw limits
+   mappedX = constrain(mappedX, 1, MAX_X_MM-1);
+   mappedY = constrain(mappedY, 1, MAX_Y_MM-1);
+ 
+   return createVector(mappedX, mappedY);
 }
 
 
@@ -708,11 +723,16 @@ function drawDiagonalLineAxidraw(midX, midY, lineLength, angle) {
   let y1 = midY - sin(angle) * lineLength;
   let x2 = midX + cos(angle) * lineLength;
   let y2 = midY + sin(angle) * lineLength;
- 
-  //line(x1, y1, x2, y2);
-   axi.moveTo(x1+startX, y1+startY);
+
+  // Clamp x1, y1, x2, and y2 to keep them within the AxiDraw limits
+  x1 = constrain(x1, 1, MAX_X_MM-1);
+  y1 = constrain(y1, 1, MAX_Y_MM-1);
+  x2 = constrain(x2, 1, MAX_X_MM-1);
+  y2 = constrain(y2, 1, MAX_Y_MM-1);
+
+  axi.moveTo(x1 + startX, y1 + startY);
   axi.penDown();
-   axi.moveTo(x2+startX, y2+startY);
+  axi.moveTo(x2 + startX, y2 + startY);
   if (liftPen) axi.penUp();
 }
 
@@ -744,19 +764,27 @@ function loopAroundAxidraw(theX, theY, theAngle, start, stop) {
 
 function drawArc(x, y, radius, startAngle, endAngle, pointCount = 16) {
   
-  // drawArc(theX, theY, spacing * 0.66, theAngle+start, theAngle+stop);
   const angleInc = (endAngle - startAngle) / pointCount;
-
   const x1 = radius * cos(startAngle);
   const y1 = radius * sin(startAngle);
-  axi.moveTo(x + x1 +startX, y + y1 +startY);
+
+  // Initial move, clamped within the AxiDraw limits
+  axi.moveTo(
+    constrain(x + x1 + startX, 0, MAX_X_MM-1),
+    constrain(y + y1 + startY, 0, MAX_Y_MM-1)
+  );
   axi.penDown();
 
   for (let i = 0; i <= pointCount; i += 1) {
     const angle = startAngle + i * angleInc;
     const relX = radius * cos(angle);
     const relY = radius * sin(angle);
-    axi.moveTo(x + relX +startX, y + relY +startY);
+    
+    // Move within constrained limits
+    axi.moveTo(
+      constrain(x + relX + startX, 1, MAX_X_MM-1),
+      constrain(y + relY + startY, 1, MAX_Y_MM-1)
+    );
   }
 
   if (liftPen) axi.penUp();
